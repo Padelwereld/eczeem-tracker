@@ -10,7 +10,7 @@ const CATS = [
   { k: "luier", l: "Luiergebied", e: "🩲" },
   { k: "slaap", l: "Slaapkwaliteit", e: "😴" },
 ];
-const TREATMENTS = ["Cerave","La Roche-Posay","Vaseline","Protopic","Hydrocortison","Andere"];
+const TREATMENTS = ["SkinShield","Huid Olie","Luiercremé","Eczeem cremé","Hormoonzalf","Overige vette cremé of zalf","Anders"];
 const TRIGGERS = [
   { k:"zwembad", l:"Zwembad", e:"🏊" },
   { k:"warmweer", l:"Warm weer", e:"🌡️" },
@@ -23,7 +23,7 @@ const TRIGGERS = [
 const COL = ["#22c55e","#4ade80","#86efac","#bef264","#facc15","#fbbf24","#f59e0b","#f97316","#ef4444","#dc2626"];
 const F = "'DM Sans',sans-serif";
 const M = "'DM Mono',monospace";
-const BLANK = { loc:"", scores:{}, notes:"", treatments:[], triggers:[], photo_url:null };
+const BLANK = { loc:"", scores:{}, notes:"", treatments:[], treatment_other:"", triggers:[], photo_url:null };
 
 const toKey = d => d.toISOString().slice(0,10);
 const fmtD = k => {
@@ -189,7 +189,8 @@ export default function App() {
     (rows || []).forEach(row => {
       entries[row.date] = {
         loc: row.loc || "", scores: row.scores || {}, notes: row.notes || "",
-        treatments: row.treatments || [], triggers: row.triggers || [], photo_url: row.photo_url || null,
+        treatments: row.treatments || [], treatment_other: row.treatment_other || "",
+        triggers: row.triggers || [], photo_url: row.photo_url || null,
       };
       if (row.photo_url) photoPaths.push({ date: row.date, path: row.photo_url });
     });
@@ -264,7 +265,8 @@ export default function App() {
     const { error } = await supabase.from('eczeem_entries').upsert({
       user_id: user.id, date: k, loc: form.loc || null,
       scores: form.scores || {}, notes: form.notes || "",
-      treatments: form.treatments || [], triggers: form.triggers || [],
+      treatments: form.treatments || [], treatment_other: form.treatment_other || "",
+      triggers: form.triggers || [],
       photo_url: form.photo_url || null, updated_at: new Date().toISOString()
     }, { onConflict: 'user_id,date' });
     if (!error) { await loadData(); flash("✅ Opgeslagen"); }
@@ -293,7 +295,8 @@ export default function App() {
       const rows = Object.entries(p).map(([date, entry]) => ({
         user_id: user.id, date, loc: entry.loc || null,
         scores: entry.scores || {}, notes: entry.notes || "",
-        treatments: entry.treatments || [], triggers: entry.triggers || [],
+        treatments: entry.treatments || [], treatment_other: entry.treatment_other || "",
+        triggers: entry.triggers || [],
         photo_url: entry.photo_url || null, updated_at: new Date().toISOString()
       }));
       const { error } = await supabase.from('eczeem_entries').upsert(rows, { onConflict: 'user_id,date' });
@@ -401,6 +404,11 @@ export default function App() {
                     background:sel?"#111":"#fff", color:sel?"#fff":"#374151", fontFamily:F, fontSize:12, fontWeight:500, cursor:"pointer" }}>{t}</button>;
               })}
             </div>
+            {(form.treatments||[]).includes("Anders") && (
+              <input type="text" value={form.treatment_other||""} onChange={e => setForm(f => ({ ...f, treatment_other:e.target.value }))}
+                placeholder="Omschrijf het middel…"
+                style={{ width:"100%", marginTop:8, padding:"9px 12px", borderRadius:10, border:"1px solid #d1d5db", fontFamily:F, fontSize:13, boxSizing:"border-box", outline:"none" }}/>
+            )}
           </div>
 
           <div style={{ marginBottom:16 }}>
